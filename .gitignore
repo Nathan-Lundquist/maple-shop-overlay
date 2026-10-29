@@ -1,0 +1,16 @@
+# Build output
+dist/
+build/
+*.spec.bak
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+*.egg-info/
+
+# DB is committed so CI can build without hitting the API.
+# Regenerate locally with: python sync_db.py
+# assets/items.db   ← intentionally tracked
+
+# Debug output
+debug_shop.png

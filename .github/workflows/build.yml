@@ -1,0 +1,50 @@
+name: Build
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:   # lets you trigger a build manually from GitHub UI
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Tesseract
+        run: |
+          choco install tesseract --yes
+          echo "C:\Program Files\Tesseract-OCR" | Out-File -Append -FilePath $env:GITHUB_PATH
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt pyinstaller
+
+      - name: Build exe
+        run: pyinstaller build.spec --clean --noconfirm
+        env:
+          TESSERACT_DIR: C:\Program Files\Tesseract-OCR
+
+      - name: Zip release folder
+        run: |
+          Compress-Archive -Path dist\MapleShopChecker\* -DestinationPath MapleShopChecker.zip
+
+      - name: Upload to release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: MapleShopChecker.zip
+
+      - name: Upload as artifact (manual runs)
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: MapleShopChecker
+          path: MapleShopChecker.zip
+          retention-days: 7
